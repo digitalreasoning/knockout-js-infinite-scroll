@@ -84,14 +84,14 @@
 			    scrollPosition,
 				scrollOffset;
 
-			if (props.scrollAxis === yAxis) {
+			if (props.scrollAxis() === yAxis) {
 				scrollPosition = parseInt(props.scrollY());
 				scrollOffset   = parseInt(props.scrollYOffset());
-			} else if (props.scrollAxis === xAxis) {
+			} else if (props.scrollAxis() === xAxis) {
 				scrollPosition = parseInt(props.scrollX());
 				scrollOffset   = parseInt(props.scrollXOffset());
 			} else {
-				throw new BindingException('Invalid property scrollAxis: ' + props.scrollAxis);
+				throw new BindingException('Invalid property scrollAxis: ' + props.scrollAxis());
 			}
 
 			return Math.max(Math.floor((scrollPosition - scrollOffset) / itemHeight) * numColsPerPage, 0);
