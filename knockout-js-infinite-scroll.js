@@ -18,7 +18,7 @@
 	ko.extenders.infinitescroll = function(target, args) {
 		function BindingException(message) {
 			this.message = message;
-			this.name    = 'Custom Binding Exception';
+			this.name    = 'Custom Knockout Binding Exception';
 		}
 
 		var props = {},
@@ -29,6 +29,7 @@
 
 		props.numPagesPadding = ko.observable(parseFloat(args.numPagesPadding) || 1);
 		props.scrollAxis      = ko.observable(args.scrollDirection ? args.scrollDirection.toUpperCase() : yAxis);
+		props.callBack        = args.callBack || function() {};
 
 		// dimensions
 		props.viewportWidth  = ko.observable(-1);
@@ -91,7 +92,7 @@
 				scrollPosition = parseInt(props.scrollX());
 				scrollOffset   = parseInt(props.scrollXOffset());
 			} else {
-				throw new BindingException('Invalid property scrollAxis: ' + props.scrollAxis());
+				throw new BindingException('Invalid value for infinite scroll binding property scrollAxis: ' + props.scrollAxis());
 			}
 
 			return Math.max(Math.floor((scrollPosition - scrollOffset) / itemHeight) * numColsPerPage, 0);
@@ -134,14 +135,14 @@
 
 			if (oldDisplayItems.length !== newDisplayItems.length) {
 				props.displayItems(newDisplayItems);
-				return;
+				return props.callBack();
 			}
 
 			// if collections are not identical, skip, replace with new items
 			for (var i = newDisplayItems.length - 1; i >= 0; i--) {
 				if (newDisplayItems[i] !== oldDisplayItems[i]) {
 					props.displayItems(newDisplayItems);
-					return;
+					return props.callBack();
 				}
 			}
 		});
