@@ -28,7 +28,7 @@
 		target.infinitescroll = props;
 
 		props.numPagesPadding = ko.observable(parseFloat(args.numPagesPadding) || 1);
-		props.scrollAxis      = ko.observable(args.scrollDirection.toUpperCase() || yAxis);
+		props.scrollAxis      = ko.observable(args.scrollDirection ? args.scrollDirection.toUpperCase() : yAxis);
 
 		// dimensions
 		props.viewportWidth  = ko.observable(-1);
