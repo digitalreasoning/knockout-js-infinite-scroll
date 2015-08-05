@@ -17,54 +17,84 @@
     }
 }(function (ko, exports) {
     ko.extenders.infinitescroll = function(target, args) {
-        var props = {};
+        var props            = {},
+            Y_AXIS           = 'Y',
+            X_AXIS           = 'X',
+            BindingException = function(message) {
+                this.message = message;
+                this.name    = 'Knockout Infinite Scroll Binding Exception';
+            },
+            validateAxis     = function(axis) {
+                if (axis !== Y_AXIS && axis !== X_AXIS) {
+                    throw new BindingException('Invalid value for infinite scroll binding property scrollAxis: ' + axis);
+                }
+                return axis;
+            };
 
         target.infinitescroll = props;
 
         props.numPagesPadding = ko.observable(parseFloat(args.numPagesPadding) || 1);
+        props.scrollAxis      = ko.observable(args.scrollAxis ? validateAxis(args.scrollAxis.toString().toUpperCase()) : Y_AXIS);
 
-        // dimensions
-        props.viewportWidth = ko.observable(-1);
-        props.viewportHeight = ko.observable(-1);
+        // viewport dimensions
+        props.viewportWidth   = ko.observable(parseInt(args.viewportWidth)  || -1);
+        props.viewportHeight  = ko.observable(parseInt(args.viewportHeight) || -1);
+        // item dimensions
+        props.itemWidth       = ko.observable(parseInt(args.itemWidth)  || -1);
+        props.itemHeight      = ko.observable(parseInt(args.itemHeight) || -1);
 
-        props.itemWidth = ko.observable(-1);
-        props.itemHeight = ko.observable(-1);
+        // current position in scrollable container
+        props.scrollPosition  = ko.observable(0);
+        props.updateScrollPos = function(pos) {
+            props.scrollPosition(parseInt(pos));
+        };
 
-        props.scrollY = ko.observable(0);
-
-        // if using the main browser scroller to scroll a container that is not 100% tall,
-        // the gap between the scroller height and div height is the scrollYOffset in px.
-        props.scrollYOffset = ko.observable(0);
+        // if using the main browser scroller to scroll a container that is not 100% tall or 100% wide,
+        // the gap between the scroller height/width and div height/width is the scrollPosOffset in px.
+        props.scrollPosOffset = ko.observable(0);
 
         // calculations
         props.numColsPerPage = ko.computed(function() {
             var viewportWidth = parseInt(props.viewportWidth()),
-                itemWidth = parseInt(props.itemWidth()) || -1;
-            return Math.max(Math.floor(viewportWidth / itemWidth), 0);
+                itemWidth     = parseInt(props.itemWidth()) || -1,
+                roundingFunc  = props.scrollAxis() === Y_AXIS ? 'floor' : 'ceil';
+
+            return Math.max(Math[roundingFunc](viewportWidth / itemWidth), 0);
         });
+
         props.numRowsPerPage = ko.computed(function() {
             var viewportHeight = parseInt(props.viewportHeight()),
-                itemHeight = parseInt(props.itemHeight()) || -1;
-            return Math.max(Math.ceil(viewportHeight / itemHeight), 0);
+                itemHeight     = parseInt(props.itemHeight()) || -1,
+                roundingFunc   = props.scrollAxis() === Y_AXIS ? 'ceil' : 'floor';
+
+            return Math.max(Math[roundingFunc](viewportHeight / itemHeight), 0);
         });
+
         props.numItemsPerPage = ko.computed(function() {
             var numColsPerPage = parseInt(props.numColsPerPage()),
                 numRowsPerPage = parseInt(props.numRowsPerPage());
+
             return numColsPerPage * numRowsPerPage;
         });
+
         props.numItemsPadding = ko.computed(function() {
             var numItemsPerPage = props.numItemsPerPage(),
                 numPagesPadding = props.numPagesPadding(),
-                numColsPerPage = props.numColsPerPage();
-            return Math.max(Math.floor(numItemsPerPage * numPagesPadding / numColsPerPage) * numColsPerPage, 0);
+                itemsMultiple   = props.scrollAxis() === Y_AXIS ? props.numColsPerPage() : props.numRowsPerPage();
+
+            return Math.max(Math.floor( (numItemsPerPage * numPagesPadding) / itemsMultiple) * itemsMultiple, 0);
         });
+
         props.firstVisibleIndex = ko.computed(function() {
-            var scrollY = parseInt(props.scrollY()),
-                scrollYOffset = parseInt(props.scrollYOffset()),
-                itemHeight = parseInt(props.itemHeight()) || -1,
-                numColsPerPage = props.numColsPerPage();
-            return Math.max(Math.floor((scrollY - scrollYOffset) / itemHeight) * numColsPerPage, 0);
+            var scrollPosition  = parseInt(props.scrollPosition()),
+                scrollPosOffset = parseInt(props.scrollPosOffset()),
+                isYAxisScroll   = props.scrollAxis() === Y_AXIS,
+                itemSize        = isYAxisScroll ? (parseInt(props.itemHeight()) || -1) : (parseInt(props.itemWidth()) || -1),
+                itemsMultiple   = isYAxisScroll ? props.numColsPerPage() : props.numRowsPerPage();
+
+            return Math.max(Math.floor((scrollPosition - scrollPosOffset) / itemSize) * itemsMultiple, 0);
         });
+
         props.lastVisibleIndex = ko.computed(function() {
             return props.firstVisibleIndex() + props.numItemsPerPage() - 1;
         });
