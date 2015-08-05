@@ -118,15 +118,15 @@
                 newDisplayItems = target.slice(0, props.lastHiddenIndex());
 
             if (oldDisplayItems.length !== newDisplayItems.length) {
+                // if collections are different lengths, we know they're not identical
                 props.displayItems(newDisplayItems);
-                return;
-            }
-
-            // if collections are not identical, skip, replace with new items
-            for (var i = newDisplayItems.length - 1; i >= 0; i--) {
-                if (newDisplayItems[i] !== oldDisplayItems[i]) {
-                    props.displayItems(newDisplayItems);
-                    return;
+            } else {
+                // check if collections are not identical, and replace with new items if they aren't
+                for (var i = newDisplayItems.length - 1; i >= 0; i--) {
+                    if (newDisplayItems[i] !== oldDisplayItems[i]) {
+                        props.displayItems(newDisplayItems);
+                        break;
+                    }
                 }
             }
         });
