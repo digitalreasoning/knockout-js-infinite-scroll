@@ -35,6 +35,7 @@
 
         props.numPagesPadding = ko.observable(parseFloat(args.numPagesPadding) || 1);
         props.scrollAxis      = ko.observable(args.scrollAxis ? validateAxis(args.scrollAxis.toString().toUpperCase()) : Y_AXIS);
+        props.rateLimit       = parseInt(args.rateLimit) || 250 ;
 
         // viewport dimensions
         props.viewportWidth   = ko.observable(parseInt(args.viewportWidth)  || -1);
@@ -113,7 +114,7 @@
 
         // display items
         props.displayItems = ko.observableArray([]);
-        ko.computed(function() {
+        props.computeDisplay = ko.computed(function() {
             var oldDisplayItems = props.displayItems.peek(),
                 newDisplayItems = target.slice(0, props.lastHiddenIndex());
 
@@ -130,5 +131,6 @@
                 }
             }
         });
+        props.computeDisplay.extend({rateLimit: props.rateLimit});
     };
 }));
